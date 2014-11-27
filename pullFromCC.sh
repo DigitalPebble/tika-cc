@@ -30,6 +30,8 @@ aws --region us-east-1 sqs receive-message --queue-url $queue --output text > me
 segment=`cat message | cut -f2`
 handle=`cat message | cut -f5`
 
+rm message
+
 if [ "$segment" = "" ] 
 then
    echo "No segment found in queue $queue"
@@ -42,7 +44,7 @@ segName=`echo $segment | sed 's/segments\//	/' | cut -f2`
 
 # hadoop jar io/target/behemoth-io-*-SNAPSHOT-job.jar com.digitalpebble.behemoth.io.warc.WARCConverterJob -D fs.s3n.awsAccessKeyId=$AWS_ACCESS_KEY -D fs.s3n.awsSecretAccessKey=$AWS_SECRET_KEY -D document.filter.mimetype.keep=.+[^html] $segment/warc/*.warc.gz $segName
 
-hadoop jar io/target/behemoth-io-*-SNAPSHOT-job.jar com.digitalpebble.behemoth.io.warc.WARCConverterJob -D document.filter.mimetype.keep=.+[^html] $segment/warc/ $segName
+hadoop jar io/target/behemoth-io-*-SNAPSHOT-job.jar com.digitalpebble.behemoth.io.warc.WARCConverterJob -D document.filter.mimetype.keep=.+[^html] $segment/warc/CC-*.warc.gz $segName
 
 RETCODE=$?
   
@@ -64,15 +66,14 @@ RETCODE=$?
    continue
   fi
 
-# TODO push to server
-# scp 
+hadoop fs -rmr $segName
 
-# TODO remove from queue
+# push to server
+scp -i ~/Ju.pem $segName-arch jnioche@162.209.99.130:$segName-arch
+
+# remove from queue
 aws --region us-east-1 sqs delete-message --queue-url  $queue --receipt-handle $handle
 
-# cleanup 
-# hadoop fs -rmr $segName
-# rm -rf $segName-arch
-rm message
+rm -rf $segName-arch
 
 done
