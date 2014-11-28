@@ -70,7 +70,7 @@ RETCODE=$?
 hadoop fs -rmr $segName
 
 # push to server
-scp -i ~/Ju.pem /mnt/$segName jnioche@162.209.99.130:$segName
+scp -rp -i ~/Ju.pem /mnt/$segName jnioche@162.209.99.130:$segName
 
 # remove from queue
 aws --region us-east-1 sqs delete-message --queue-url  $queue --receipt-handle $handle
