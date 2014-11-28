@@ -55,7 +55,8 @@ RETCODE=$?
    continue
   fi
 
-./behemoth exporter -i $segName -n URL -o $segName-arch -b
+# export to the local FS
+./behemoth exporter -i $segName -n URL -o file:///mnt/$segName -b
 
 RETCODE=$?
   
@@ -69,11 +70,11 @@ RETCODE=$?
 hadoop fs -rmr $segName
 
 # push to server
-scp -i ~/Ju.pem $segName-arch jnioche@162.209.99.130:$segName-arch
+scp -i ~/Ju.pem /mnt/$segName jnioche@162.209.99.130:$segName
 
 # remove from queue
 aws --region us-east-1 sqs delete-message --queue-url  $queue --receipt-handle $handle
 
-rm -rf $segName-arch
+rm -rf /mnt/$segName
 
 done
